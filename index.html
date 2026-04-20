@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة ياقوت | Maryam Yasser</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --ruby: #9b111e; }
+        body { font-family: 'Cairo', sans-serif; background-color: #fcfcfc; margin: 0; overflow-x: hidden; }
+        .ruby-text { color: var(--ruby); }
+        .screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .screen.active { display: flex; }
+        .glass-card { background: white; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); padding: 40px; width: 100%; max-width: 450px; text-align: center; border: 1px solid #eee; }
+        .custom-input { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #eee; text-align: center; outline: none; margin-bottom: 10px; font-weight: bold; transition: 0.3s; }
+        .custom-input:focus { border-color: var(--ruby); }
+        .search-results { background: white; border: 1px solid #ddd; border-radius: 15px; max-height: 150px; overflow-y: auto; margin-bottom: 15px; width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .search-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f5f5f5; transition: 0.2s; }
+        .search-item:hover { background: #fff5f5; color: var(--ruby); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1.5px solid black; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; font-weight: bold; }
+        th { background-color: #f9f9f9; }
+        .report-box { background: white; padding: 40px; border: 2px solid black; width: 100%; max-width: 800px; position: relative; }
+        .btn-primary { background-color: var(--ruby); color: white; width: 100%; py: 4; border-radius: 15px; font-weight: bold; transition: 0.3s; }
+        .btn-primary:hover { background-color: #7a0d17; transform: translateY(-2px); }
+    </style>
+</head>
+<body onload="initializeYaqoot()">
+
+    <div id="welcome" class="screen active">
+        <i class="fa-solid fa-gem ruby-text text-9xl mb-6 animate-pulse"></i>
+        <h1 class="ruby-text text-8xl font-bold mb-6">ياقوت</h1>
+        <p class="text-gray-500 mb-8 text-xl">مرحباً بكِ في مستقبل التعليم الرقمي</p>
+        <button onclick="show('school-selection')" class="bg-red-800 text-white px-20 py-4 rounded-full text-2xl font-bold shadow-lg hover:bg-red-900 transition">دخول المنصة</button>
+    </div>
+
+    <div id="school-selection" class="screen">
+        <div class="glass-card">
+            <h2 class="ruby-text text-2xl font-bold mb-6 text-center">اختيار المدرسة</h2>
+            <input type="text" id="school-input" oninput="handleSearch()" placeholder="اكتبي اسم مدرستكِ هنا..." class="custom-input">
+            <div id="school-list" class="search-results hidden"></div>
+            <button onclick="confirmSchool()" class="bg-red-800 text-white w-full py-4 rounded-xl font-bold mb-4 shadow-md">تأكيد الاختيار</button>
+            <button onclick="logout()" class="text-gray-400 underline hover:text-red-800 transition">العودة للرئيسية</button>
+        </div>
+    </div>
+
+    <div id="choice" class="screen">
+        <div class="grid gap-6 w-full max-w-sm text-center">
+            <button onclick="show('student-login')" class="bg-white p-10 rounded-3xl shadow-xl border-b-8 border-red-800 font-bold text-3xl ruby-text hover:bg-red-50 transition">بوابة الطالبة</button>
+            <button onclick="show('teacher-login')" class="bg-white p-10 rounded-3xl shadow-xl border-b-8 border-gray-300 font-bold text-3xl text-gray-400 hover:bg-gray-50 transition">بوابة الإدارة</button>
+            <button onclick="show('school-selection')" class="mt-6 text-red-800 font-bold underline">تغيير المدرسة</button>
+            <button onclick="logout()" class="text-gray-400">تسجيل خروج</button>
+        </div>
+    </div>
+
+    <div id="student-login" class="screen">
+        <div class="glass-card">
+            <h2 class="ruby-text text-2xl font-bold mb-6">البحث عن النتائج</h2>
+            <input type="text" id="std-name" placeholder="اسم الطالبة الثلاثي" class="custom-input mb-6">
+            <button onclick="searchResult()" class="bg-red-800 text-white w-full py-4 rounded-xl font-bold mb-4">عرض كشف الدرجات</button>
+            <button onclick="show('choice')" class="text-gray-400 underline">رجوع للخيارات</button>
+        </div>
+    </div>
+
+    <div id="teacher-login" class="screen">
+        <div class="glass-card">
+            <h2 class="ruby-text text-2xl font-bold mb-6">الدخول للإدارة</h2>
+            <input type="text" id="t-user" placeholder="اسم المستخدم" class="custom-input">
+            <input type="password" id="t-pass" placeholder="كلمة المرور" class="custom-input mb-6">
+            
+            <button id="auth-btn" onclick="checkTeacher()" class="bg-black text-white w-full py-4 rounded-xl font-bold mb-4">تحقق من الصلاحية</button>
+            
+            <a id="airtable-link" href="https://airtable.com/appfNlaa6mLfGebsD/tbljOciZfjjWYC2Fx" target="_blank" class="hidden bg-green-700 text-white w-full py-4 rounded-xl font-bold mb-4 text-center block">فتح قاعدة البيانات (Airtable)</a>
+
+            <button onclick="show('choice')" class="text-gray-400 underline">رجوع</button>
+        </div>
+    </div>
+
+    <div id="result" class="screen">
+        <div id="report" class="report-box">
+            <div class="flex justify-between items-center border-b-2 border-black pb-4 mb-4 text-sm">
+                <div class="text-right">
+                    <p>جمهورية العراق</p>
+                    <p id="r-school" class="font-bold"></p>
+                </div>
+                <div class="text-center">
+                    <i class="fa-solid fa-gem ruby-text text-3xl"></i>
+                    <p class="font-bold text-xl">منصة ياقوت التعليمية</p>
+                </div>
+                <div class="text-left"><p id="r-date"></p></div>
+            </div>
+            <p class="text-right text-lg mb-4 font-bold">اسم الطالبة: <span id="r-name" class="border-b-2 border-black px-4"></span></p>
+            <table>
+                <thead><tr><th>المادة الدراسية</th><th>الفصل الأول</th><th>نصف السنة</th><th>الفصل الثاني</th><th>السعي السنوي</th><th>النتيجة</th></tr></thead>
+                <tbody id="res-table"></tbody>
+            </table>
+            <div class="flex justify-between mt-12 text-xs text-center font-bold">
+                <div class="border-t border-black pt-2 px-4">توقيع المعلمة</div>
+                <div class="border-t border-black pt-2 px-4">توقيع ولي الأمر</div>
+                <div class="border-t border-black pt-2 px-4">ختم المديرة</div>
+            </div>
+            <div class="mt-8 text-center text-[10px] text-gray-400">تطوير: مريم ياسر الريكابي - منصة ياقوت الرقمية</div>
+        </div>
+        <div class="flex gap-4 mt-8">
+            <button onclick="exportResult()" class="bg-black text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition">تحميل PDF</button>
+            <button onclick="show('student-login')" class="bg-gray-200 px-8 py-3 rounded-full font-bold hover:bg-gray-300 transition">بحث جديد</button>
+            <button onclick="logout()" class="bg-red-800 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-red-900 transition">خروج</button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'pathiw5cFDQ5HoB3h.ef2e062098d1a40b3bd7e1c7746a9e8eb5b81f49899432839d047949bb49acf6'; 
+        const BASE_ID = 'appfNlaa6mLfGebsD';
+        const TABLE_NAME = 'tbljOciZfjjWYC2Fx';
+        let records = [], schoolList = [], selectedSchool = "";
+
+        function show(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        async function initializeYaqoot() {
+            try {
+                const res = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`, { 
+                    headers: { Authorization: `Bearer ${API_KEY}` } 
+                });
+                const data = await res.json();
+                records = data.records;
+                schoolList = [...new Set(records.map(r => r.fields["اسم المدرسة"]))].filter(Boolean);
+            } catch(e) {
+                console.error("خطأ في جلب البيانات:", e);
+            }
+        }
+
+        function norm(s) { 
+            return s ? s.trim().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/\s+/g, '') : ""; 
+        }
+
+        function handleSearch() {
+            const v = norm(document.getElementById('school-input').value);
+            const div = document.getElementById('school-list');
+            const filtered = schoolList.filter(s => norm(s).includes(v));
+            if(v && filtered.length) {
+                div.innerHTML = filtered.map(s => `<div class="search-item" onclick="setS('${s}')">${s}</div>`).join('');
+                div.classList.remove('hidden');
+            } else { div.classList.add('hidden'); }
+        }
+
+        function setS(s) { 
+            document.getElementById('school-input').value = s; 
+            selectedSchool = s; 
+            document.getElementById('school-list').classList.add('hidden'); 
+        }
+
+        function confirmSchool() {
+            const typed = document.getElementById('school-input').value;
+            if(!typed) { alert("يرجى كتابة اسم المدرسة"); return; }
+            const match = schoolList.find(s => norm(s).includes(norm(typed)) || norm(typed).includes(norm(s)));
+            if(match) { selectedSchool = match; show('choice'); }
+            else { alert("عذراً، هذه المدرسة غير مسجلة لدينا"); }
+        }
+
+        function searchResult() {
+            const n = norm(document.getElementById('std-name').value);
+            if(!n) { alert("يرجى إدخال اسم الطالبة"); return; }
+            const m = records.find(r => norm(r.fields["الاسم"]).includes(n) && r.fields["اسم المدرسة"] === selectedSchool);
+            
+            if(m) {
+                const f = m.fields;
+                document.getElementById('r-name').innerText = f["الاسم"];
+                document.getElementById('r-school').innerText = "مدرسة: " + selectedSchool;
+                document.getElementById('r-date').innerText = new Date().toLocaleDateString('ar-EG');
+                
+                let h = "";
+                const subjects = ["التربية الاسلامية", "اللغة العربية", "اللغة الانجليزية", "الرياضيات", "العلوم", "الاجتماعيات", "الفنية"];
+                
+                subjects.forEach(s => {
+                    const total = Math.round(f['السعي السنوي_'+s] || 0);
+                    h += `<tr>
+                        <td>${s}</td>
+                        <td>${Math.round(f[s+'_فصل1']||0)}</td>
+                        <td>${Math.round(f[s+'_نصف السنة']||0)}</td>
+                        <td>${Math.round(f[s+'_الفصل2']||0)}</td>
+                        <td>${total}</td>
+                        <td class="${total>=50?'text-green-600':'text-red-600'}">${total>=50?'ناجح':'راسب'}</td>
+                    </tr>`;
+                });
+                document.getElementById('res-table').innerHTML = h;
+                show('result');
+            } else { alert("عذراً، لم نتمكن من العثور على النتائج لهذا الاسم في هذه المدرسة"); }
+        }
+
+        function checkTeacher() {
+            const u = document.getElementById('t-user').value;
+            const p = document.getElementById('t-pass').value;
+            if(u === "مريم" && p === "2005") {
+                document.getElementById('auth-btn').style.display = 'none';
+                document.getElementById('airtable-link').classList.remove('hidden');
+            } else { alert("خطأ في اسم المستخدم أو كلمة المرور"); }
+        }
+
+        function logout() { window.location.reload(); }
+        function exportResult() { 
+            const element = document.getElementById('report');
+            const opt = {
+                margin: 0.5,
+                filename: `نتيجة_${document.getElementById('r-name').innerText}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>
